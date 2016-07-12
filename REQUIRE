@@ -1,3 +1,4 @@
 julia 0.4.0-dev+5074
 DSP
 ArrayViews
+StatsBase

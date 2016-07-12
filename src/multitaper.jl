@@ -2,10 +2,10 @@ export multitaper, psd, xspec, coherence, mtfft
 
 # Apply a statistic to tapered FFT of continuous signals
 # A is samples x channels x trials
-function multitaper{T<:Real}(A::Union(AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}),
-                             stats::(TransformStatistic, TransformStatistic...), fs::Real=1;
-                             tapers::Union(Vector, Matrix)=dpss(size(A, 1), 4),
-                             nfft::Int=nextfastfft(size(A, 1)), freqrange::Range1{Int}=0:-1)
+function multitaper{T<:Real}(A::Union{AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}},
+                             t::Statistic, fs::Real=1;
+                             tapers::Union{Vector, Matrix}=dpss(size(A, 1), 4),
+                             nfft::Int=nextfastfft(size(A, 1)), freqrange::Range{Int}=0:-1)
     # We can't guarantee order of kwargs, so this has to be here
     if freqrange == 0:-1
         freqrange = 1:(nfft >> 1 + 1)
@@ -21,7 +21,7 @@ function multitaper{T<:Real}(A::Union(AbstractVector{T}, AbstractMatrix{T}, Abst
     lastsamplemultiplier = freqrange[end] == nout && iseven(nfft) ?
                            convert(T, sqrt(1/fs)) : multiplier
 
-    for stat in stats
+    for stat in t
         init(stat, length(freqrange), nchannels, ntapers, size(A, 3))
     end
 
@@ -56,19 +56,19 @@ function multitaper{T<:Real}(A::Union(AbstractVector{T}, AbstractMatrix{T}, Abst
             fftview[end, k] = fftout[freqrange[end], k]*lastsamplemultiplier
         end
 
-        for stat in stats
+        for stat in t
             accumulate(stat, fftview, i)
         end
     end
 
-    [finish(stat) for stat in stats]
+    [finish(stat) for stat in t]
 end
 
 # Perform tapered FFT of continuous signals, returning all of the tapered FFTs
 # A is samples x channels x trials
 # output is frequencies x channels x tapers x trials
-function mtfft{T<:Real}(A::Union(AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}), fs::Real=1;
-                        tapers::Union(Vector, Matrix)=dpss(size(A, 1), 4),
+function mtfft{T<:Real}(A::Union{AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}}, fs::Real=1;
+                        tapers::Union{Vector, Matrix}=dpss(size(A, 1), 4),
                         nfft::Int=nextfastfft(size(A, 1)))
     n = size(A, 1)
     nout = nfft >> 1 + 1
@@ -104,8 +104,8 @@ function mtfft{T<:Real}(A::Union(AbstractVector{T}, AbstractMatrix{T}, AbstractA
 end
 
 # Calling with a single type or instance
-multitaper{T<:Real}(A::Union(AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}),
-                    stat::TransformStatistic, args...; kw...) =
+multitaper{T<:Real}(A::Union{AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}},
+                    stat::Statistic, args...; kw...) =
     multitaper(A, (stat,), args...; kw...)[1]
 
 #

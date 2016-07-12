@@ -4,10 +4,10 @@ export spiketriggeredspectrum, pfcoherence, pfplv, pfppc0, pfppc1, pfppc2, pxcor
 # Perform tapered FFT of individual spikes embedded in a continuous signal
 #
 function spiketriggeredspectrum{T<:Integer,S<:Real}(points::AbstractVector{T}, field::AbstractVector{S},
-                                                    window::Range1{Int};
+                                                    window::Range{Int};
                                                     nfft::Int=nextpow2(length(window)),
-                                                    freqrange::Range1{Int}=1:(nfft >> 1 + 1),
-                                                    tapers::Union(Vector, Matrix)=hanning(length(window)))#dpss(length(window), length(window)/fs*10))
+                                                    freqrange::Range{Int}=1:(nfft >> 1 + 1),
+                                                    tapers::Union{Vector, Matrix}=hanning(length(window)))#dpss(length(window), length(window)/fs*10))
     n = length(window)
     nfreq = length(freqrange)
     npoints = length(points)
@@ -161,7 +161,7 @@ end
 
 # Compute pfdiffsq with preallocated memory for out, pssum, and
 # pssqsum. out is assumed to be zeroed; pssum and pssqsum are not.
-function _pfdiffsq!{T}(out::Union(Vector{T}, Matrix{T}), pssum::Array{Complex{T},2}, pssqsum::Array{T,2},
+function _pfdiffsq!{T}(out::Union{Vector{T}, Matrix{T}}, pssum::Array{Complex{T},2}, pssqsum::Array{T,2},
                        pstrial::AbstractArray{Complex{T},3}, trials=1:size(pstrial, 3), idx::Int=1)
     fill!(pssum, zero(Complex{T}))
     fill!(pssqsum, zero(T))

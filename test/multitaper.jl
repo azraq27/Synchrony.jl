@@ -6,9 +6,9 @@ datadir = joinpath(Pkg.dir("Synchrony"), "test", "data")
 input = cell(2)
 output = cell(2)
 for i = 1:2
-    input[i] = float64(readdlm(joinpath(datadir, "psd_test$(i)_in.txt"), '\t'))[:]
+    input[i] = map(Float64,readdlm(joinpath(datadir, "psd_test$(i)_in.txt"), '\t'))[:]
     output[i] = psd(input[i], 1000, nfft=512)[:]
-    truth = float64(readdlm(joinpath(datadir, "psd_test$(i)_out.txt"), '\t'))
+    truth = map(Float64,readdlm(joinpath(datadir, "psd_test$(i)_out.txt"), '\t'))
     @test_approx_eq output[i] truth
 end
 
@@ -27,14 +27,14 @@ sXY2 = xspec(input[2], input[1], 1000, nfft=512)
 
 # Test coherence
 c = coherence(input[1], input[2], 1000, nfft=512)
-truth = float64(readdlm(joinpath(datadir, "coherence_mag.txt"), '\t'))
+truth = map(Float64,readdlm(joinpath(datadir, "coherence_mag.txt"), '\t'))
 @test_approx_eq c truth
 
 # Test multiple channel functionality
 (xs, s, c2) = multitaper(in1, (CrossSpectrum(), PowerSpectrum(), Coherency()), 1000, nfft=512)
 @test_approx_eq s out1
 @test_approx_eq xs sXY1
-truth = float64(readdlm(joinpath(datadir, "coherence_phi.txt"), '\t')[2:end-1])
+truth = map(Float64,readdlm(joinpath(datadir, "coherence_phi.txt"), '\t')[2:end-1])
 @test_approx_eq abs(c2) c
 @test_approx_eq angle(c2[2:end-1]) truth
 
