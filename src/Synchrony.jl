@@ -1,5 +1,5 @@
 module Synchrony
-using DSP, ArrayViews
+using DSP
 
 export frequencies
 
