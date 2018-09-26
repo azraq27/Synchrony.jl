@@ -1,4 +1,4 @@
-using Synchrony, Base.Test, CrossDecomposition
+using Synchrony, Test, CrossDecomposition
 
 # Tests for statistics determined by cross spectrum
 angles = [
@@ -51,7 +51,7 @@ for i1 = 1:length(angles), i2 = 1:length(angles)
 end
 true_wpli2debiased = mean(pairs)./mean(abs(pairs))
 
-oneinput = ones(Complex128, length(angles))
+oneinput = ones(ComplexF64, length(angles))
 csinput = [oneinput expcoef]
 
 # Single input
@@ -125,7 +125,7 @@ true_ccor = sum(abs2(cor(canoncor(am, bm))))
 function dumbcfc(x, y, nbins)
     angles = angle(x)
     amps = abs(y)
-    bins = linspace(-pi, pi, nbins+1)
+    bins = range(-pi, stop=pi, length=nbins+1)
     mean_amp = [mean(amps[bins[i] .<= angles .<= bins[i+1]]) for i = 1:nbins]
     pj = mean_amp/sum(mean_amp)
     h = -sum(pj.*log(pj))
@@ -147,7 +147,7 @@ d = [50, 120, 192, 210, 220, 250, 262, 291, 292, 320, 321, 340,
      10, 11, 21, 22, 31, 32, 41, 150, 151, 152, 170, 190, 293,
      30, 70, 110, 172, 180, 191, 240, 251, 260, 261, 290, 351]
 groups = [fill(1, 12); fill(2, 12); fill(3, 13); fill(4, 12)]
-v = computestat(UniformScores(groups), Complex128[rand(length(d)).*cis(d/180*pi) zeros(length(d))])
+v = computestat(UniformScores(groups), ComplexF64[rand(length(d)).*cis(d/180*pi) zeros(length(d))])
 @test_approx_eq_eps v[1, 2] 12.81 0.01
 
 csinput = complex(randn(25, 3), randn(25, 3))

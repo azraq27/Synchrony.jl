@@ -9,13 +9,13 @@ Base.eltype(::MeanPhaseDiff, X::AbstractArray{Complex{T}}) where {T<:Real} = Com
 # Single input matrix
 allocwork(t::MeanPhaseDiff{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) where {T<:Real} = nothing
 computestat!(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
-             work::Void, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
+             work::Nothing, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     scale!(Ac_mul_A!(out, X), 1/ntrials(X))
 
 # Two input matrices
 finish_xy!(::MeanPhaseDiff, out, work, n) = scale!(out, work, 1/n)
 computestat!(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
-             work::Void, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
+             work::Nothing, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     scale!(Ac_mul_B!(out, X, Y), 1/ntrials(X))
 
 #

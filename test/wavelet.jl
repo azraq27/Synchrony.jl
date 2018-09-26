@@ -1,4 +1,4 @@
-using Synchrony, Base.Test
+using Synchrony, Test
 datadir = joinpath(Pkg.dir("Synchrony"), "test", "data")
 
 # Test Morlet wavelet bases

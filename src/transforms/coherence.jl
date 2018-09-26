@@ -7,7 +7,7 @@ Base.eltype(::Coherency, X::AbstractArray{Complex{T}}) where {T<:Real} = Complex
 
 # Single input matrix
 allocwork(::Coherency, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} = nothing
-computestat!(::Coherency, out::AbstractMatrix{Complex{T}}, work::Void,
+computestat!(::Coherency, out::AbstractMatrix{Complex{T}}, work::Nothing,
              X::AbstractVecOrMat{Complex{T}}) where {T<:Real} = 
     cov2coh!(out, Ac_mul_A!(out, X))
 
@@ -52,11 +52,11 @@ surrogateval(::Coherency, v) = v
 # Single input matrix
 allocwork(t::Union{AbstractJackknifeSurrogates{Coherency}, AbstractJackknifeSurrogates{Coherence}},
           X::AbstractVecOrMat{Complex{T}}) where {T<:Real} = (allocwork(t.transform, X), Array(T, div(size(X, 1), jnn(t)), size(X, 2)))
-accumulator_array(::AbstractJackknifeSurrogates{Coherency}, work::Void, out::AbstractMatrix) = out
+accumulator_array(::AbstractJackknifeSurrogates{Coherency}, work::Nothing, out::AbstractMatrix) = out
 accumulator_array(::AbstractJackknifeSurrogates{Coherence}, work::AbstractMatrix, out::AbstractMatrix) = work
 function computestat!(t::Union{AbstractJackknifeSurrogates{Coherency}, AbstractJackknifeSurrogates{Coherence}},
                       out::JackknifeSurrogatesOutput,
-                      work::Tuple{Union{Matrix{Complex{T}}, Void}, Matrix{T}},
+                      work::Tuple{Union{Matrix{Complex{T}}, Nothing}, Matrix{T}},
                       X::AbstractVecOrMat{Complex{T}}) where T<:Real
     stat = t.transform
     trueval = out.trueval
