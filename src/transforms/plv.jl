@@ -2,20 +2,20 @@
 # Circular mean of phase difference
 #
 
-immutable MeanPhaseDiff{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
+struct MeanPhaseDiff{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
 MeanPhaseDiff() = MeanPhaseDiff{false}()
-Base.eltype{T<:Real}(::MeanPhaseDiff, X::AbstractArray{Complex{T}}) = Complex{T}
+Base.eltype(::MeanPhaseDiff, X::AbstractArray{Complex{T}}) where {T<:Real} = Complex{T}
 
 # Single input matrix
-allocwork{T<:Real}(t::MeanPhaseDiff{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) = nothing
-computestat!{T<:Real}(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
-                      work::Void, X::AbstractVecOrMat{Complex{T}}) =
+allocwork(t::MeanPhaseDiff{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) where {T<:Real} = nothing
+computestat!(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
+             work::Void, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     scale!(Ac_mul_A!(out, X), 1/ntrials(X))
 
 # Two input matrices
 finish_xy!(::MeanPhaseDiff, out, work, n) = scale!(out, work, 1/n)
-computestat!{T<:Real}(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
-                      work::Void, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) =
+computestat!(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
+             work::Void, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     scale!(Ac_mul_B!(out, X, Y), 1/ntrials(X))
 
 #
@@ -31,19 +31,19 @@ computestat!{T<:Real}(t::MeanPhaseDiff{true}, out::AbstractMatrix{Complex{T}},
 # bias-free measure of rhythmic neuronal synchronization. NeuroImage,
 # 51(1), 112–122. doi:10.1016/j.neuroimage.2010.01.073
 
-immutable PLV{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
+struct PLV{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
 PLV() = PLV{false}()
 
-immutable PPC{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
+struct PPC{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
 PPC() = PPC{false}()
 
-Base.eltype{T<:Real}(::Union{PLV, PPC}, X::AbstractArray{Complex{T}}) = T
+Base.eltype(::Union{PLV, PPC}, X::AbstractArray{Complex{T}}) where {T<:Real} = T
 
-accumulator{T<:Real}(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}, ::Type{Complex{T}}) = zero(Complex{T})
-@inline accumulate{T<:Real}(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}, x::Complex{T},
-                            v1::Complex{T}, v2::Complex{T}) = (x + conj(v1)*v2)
-@inline accumulate{T<:Real}(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}, x::Complex{T},
-                            v1::Complex{T}, v2::Complex{T}, weight::Real) = (x + conj(v1)*v2*weight)
+accumulator(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}, ::Type{Complex{T}}) where {T<:Real} = zero(Complex{T})
+@inline accumulate(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}, x::Complex{T},
+                   v1::Complex{T}, v2::Complex{T}) where {T<:Real} = (x + conj(v1)*v2)
+@inline accumulate(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}, x::Complex{T},
+                   v1::Complex{T}, v2::Complex{T}, weight::Real) where {T<:Real} = (x + conj(v1)*v2*weight)
 finish(::Type{MeanPhaseDiff{true}}, x::Complex, n::Int) = x/n
 finish(::Type{PLV{true}}, x::Complex, n::Int) = abs(x)/n
 finish(::Type{PPC{true}}, x::Complex, n::Int) = abs2(x)/(n*(n-1)) - 1/(n-1)
@@ -51,16 +51,16 @@ diagval(::Union{Type{MeanPhaseDiff{true}}, Type{PLV{true}}, Type{PPC{true}}}) = 
 
 
 # Single input matrix
-allocwork{T<:Real}(t::Union{PLV{true}, PPC{true}}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) =
+allocwork(t::Union{PLV{true}, PPC{true}}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) where {T<:Real} =
     Array(Complex{T}, nchannels(X), nchannels(Y))
-function finish!{T<:PairwiseStatistic}(::Type{T}, out, work, n)
+function finish!(::Type{T}, out, work, n) where T<:PairwiseStatistic
     for j = 1:size(out, 1), i = 1:j
         @inbounds out[i, j] = finish(T, work[i, j], n)
     end
     out
 end
-function computestat!{T<:Real}(t::Union{PLV{true}, PPC{true}}, out::AbstractMatrix{T}, work::Matrix{Complex{T}},
-                               X::AbstractVecOrMat{Complex{T}})
+function computestat!(t::Union{PLV{true}, PPC{true}}, out::AbstractMatrix{T}, work::Matrix{Complex{T}},
+                      X::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X)
     finish!(typeof(t), out, Ac_mul_A!(work, X), ntrials(X))
     for i = 1:size(out, 1)
@@ -70,14 +70,14 @@ function computestat!{T<:Real}(t::Union{PLV{true}, PPC{true}}, out::AbstractMatr
 end
 
 # Two input matrices
-function finish_xy!{T<:PairwiseStatistic}(::Type{T}, out, work, n)
+function finish_xy!(::Type{T}, out, work, n) where T<:PairwiseStatistic
     for i = 1:length(out)
         @inbounds out[i] = finish(T, work[i], n)
     end
     out
 end
-function computestat!{T<:Real}(t::Union{PLV{true}, PPC{true}}, out::AbstractMatrix{T}, work::Matrix{Complex{T}},
-                               X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function computestat!(t::Union{PLV{true}, PPC{true}}, out::AbstractMatrix{T}, work::Matrix{Complex{T}},
+                      X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X, Y)
     finish_xy!(typeof(t), out, Ac_mul_B!(work, X, Y), ntrials(X))
 end
@@ -87,13 +87,13 @@ end
 #
 
 # Single input matrix
-allocwork{T<:Real}(t::Union{AbstractJackknifeSurrogates{MeanPhaseDiff{true}}, AbstractJackknifeSurrogates{PPC{true}}, AbstractJackknifeSurrogates{PLV{true}}},
-                   X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) =
+allocwork(t::Union{AbstractJackknifeSurrogates{MeanPhaseDiff{true}}, AbstractJackknifeSurrogates{PPC{true}}, AbstractJackknifeSurrogates{PLV{true}}},
+          X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) where {T<:Real} =
     Array(Complex{T}, nchannels(X), nchannels(Y))
-function computestat!{S<:Union{MeanPhaseDiff{true}, PLV{true}, PPC{true}}, T<:Real}(t::AbstractJackknifeSurrogates{S},
-                                                                                    out::JackknifeSurrogatesOutput,
-                                                                                    work::Matrix{Complex{T}},
-                                                                                    X::AbstractVecOrMat{Complex{T}})
+function computestat!(t::AbstractJackknifeSurrogates{S},
+                      out::JackknifeSurrogatesOutput,
+                      work::Matrix{Complex{T}},
+                      X::AbstractVecOrMat{Complex{T}}) where {S<:Union{MeanPhaseDiff{true}, PLV{true}, PPC{true}}, T<:Real}
     trueval = out.trueval
     surrogates = out.surrogates
 
@@ -126,11 +126,11 @@ function computestat!{S<:Union{MeanPhaseDiff{true}, PLV{true}, PPC{true}}, T<:Re
 end
 
 # Two input matrices
-function computestat!{S<:Union{MeanPhaseDiff{true}, PLV{true}, PPC{true}}, T<:Real}(t::AbstractJackknifeSurrogates{S},
-                                                                                    out::JackknifeSurrogatesOutput,
-                                                                                    work::Matrix{Complex{T}},
-                                                                                    X::AbstractVecOrMat{Complex{T}},
-                                                                                    Y::AbstractVecOrMat{Complex{T}})
+function computestat!(t::AbstractJackknifeSurrogates{S},
+                      out::JackknifeSurrogatesOutput,
+                      work::Matrix{Complex{T}},
+                      X::AbstractVecOrMat{Complex{T}},
+                      Y::AbstractVecOrMat{Complex{T}}) where {S<:Union{MeanPhaseDiff{true}, PLV{true}, PPC{true}}, T<:Real}
     trueval = out.trueval
     surrogates = out.surrogates
 

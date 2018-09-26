@@ -6,11 +6,11 @@
 # Society. Series B (Methodological), 34(1), 102–113.
 #
 using StatsBase
-immutable UniformScores <: PairwiseStatistic
+struct UniformScores <: PairwiseStatistic
     groups::Vector{Int32}
     ningroup::Vector{Int32}
 
-    function UniformScores{T<:Integer}(groups::Vector{T})
+    function UniformScores(groups::Vector{T}) where T<:Integer
         ext = extrema(groups)
         ext[1] == 1 || throw(ArgumentError("group indices must start at 1"))
         ningroup = zeros(Int32, ext[2])
@@ -20,15 +20,15 @@ immutable UniformScores <: PairwiseStatistic
         new(groups, ningroup)
     end
 end
-Base.eltype{T<:Real}(::UniformScores, X::AbstractArray{Complex{T}}) = T
+Base.eltype(::UniformScores, X::AbstractArray{Complex{T}}) where {T<:Real} = T
 
-allocwork{T<:Real}(t::UniformScores, X::AbstractVecOrMat{Complex{T}}) =
+allocwork(t::UniformScores, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     (zeros(T, size(X)), zeros(T, ntrials(X)), zeros(Int, ntrials(X)), [cis(2π*i/size(X, 1)) for i = 1:size(X, 1)], zeros(Complex{T}, length(t.ningroup)))
 
 # Single input matrix
 using Base.Sort: DEFAULT_UNSTABLE, Perm, Forward
-function computestat!{T<:Real}(t::UniformScores, out::AbstractMatrix{T},
-                               work::Tuple{Matrix{T}, Vector{T}, Vector{Int}, Vector{Complex{T}}, Vector{Complex{T}}}, X::AbstractVecOrMat{Complex{T}})
+function computestat!(t::UniformScores, out::AbstractMatrix{T},
+                      work::Tuple{Matrix{T}, Vector{T}, Vector{Int}, Vector{Complex{T}}, Vector{Complex{T}}}, X::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X)
     angles, anglediff, ranks, circranks, d = work
     (size(X, 1) == size(angles, 1) == length(anglediff) == length(ranks) == length(circranks) == length(t.groups) &&

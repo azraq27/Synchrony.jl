@@ -2,14 +2,14 @@
 # Coherence (as the square root of the correlation matrix)
 #
 
-immutable Correlation <: PairwiseStatistic; end
-Base.eltype{T<:Real}(::Correlation, X::AbstractArray{T}) = T
+struct Correlation <: PairwiseStatistic; end
+Base.eltype(::Correlation, X::AbstractArray{T}) where {T<:Real} = T
 
 # Single input matrix
-allocwork{T<:Real}(::Correlation, X::AbstractVecOrMat{T}) =
+allocwork(::Correlation, X::AbstractVecOrMat{T}) where {T<:Real} =
     (Array(T, size(X, 1), size(X, 2)), Array(T, 1, size(X, 2)))
-function computestat!{T<:Real}(::Correlation, out::AbstractMatrix{T}, work::Tuple{Matrix{T},Matrix{T}},
-                               X::AbstractVecOrMat{T})
+function computestat!(::Correlation, out::AbstractMatrix{T}, work::Tuple{Matrix{T},Matrix{T}},
+                      X::AbstractVecOrMat{T}) where T<:Real
     Xmμ, μ = work
     mean!(μ, X)
     broadcast!(-, Xmμ, X, μ)
@@ -17,11 +17,11 @@ function computestat!{T<:Real}(::Correlation, out::AbstractMatrix{T}, work::Tupl
 end
 
 # Two input matrices
-allocwork{T<:Real}(::Correlation, X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) =
+allocwork(::Correlation, X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) where {T<:Real} =
     (Array(T, size(X, 1), size(X, 2)), Array(T, size(Y, 1), size(Y, 2)), cov2coh_work(X), cov2coh_work(Y))
-function computestat!{T<:Real}(::Correlation, out::AbstractMatrix{T},
-                               work::Tuple{Matrix{T}, Matrix{T}, Array{T}, Array{T}},
-                               X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T})
+function computestat!(::Correlation, out::AbstractMatrix{T},
+                      work::Tuple{Matrix{T}, Matrix{T}, Array{T}, Array{T}},
+                      X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) where T<:Real
     Xmμ, Ymμ, Xμ, Yμ = work
     mean!(Xμ, X)
     broadcast!(-, Xmμ, X, Xμ)
@@ -36,14 +36,14 @@ end
 surrogateval(::Correlation, v) = v
 
 # Single input matrix
-allocwork{T<:Real}(t::JackknifeSurrogates{Correlation},
-                   X::AbstractVecOrMat{T}) = (Array(T, size(X, 1), size(X, 2)),
-                                              Array(T, 1, size(X, 2)),
-                                              Array(T, div(size(X, 1), jnn(t)), size(X, 2)))
-function computestat!{T<:Real}(t::JackknifeSurrogates{Correlation},
-                               out::JackknifeSurrogatesOutput,
-                               work::NTuple{3,Matrix{T}},
-                               X::AbstractVecOrMat{T})
+allocwork(t::JackknifeSurrogates{Correlation},
+          X::AbstractVecOrMat{T}) where {T<:Real} = (Array(T, size(X, 1), size(X, 2)),
+                                                     Array(T, 1, size(X, 2)),
+                                                     Array(T, div(size(X, 1), jnn(t)), size(X, 2)))
+function computestat!(t::JackknifeSurrogates{Correlation},
+                      out::JackknifeSurrogatesOutput,
+                      work::NTuple{3,Matrix{T}},
+                      X::AbstractVecOrMat{T}) where T<:Real
     stat = t.transform
     trueval = out.trueval
     surrogates = out.surrogates
@@ -87,15 +87,15 @@ function computestat!{T<:Real}(t::JackknifeSurrogates{Correlation},
 end
 
 # Two input matrices
-allocwork{T<:Real}(t::JackknifeSurrogates{Correlation}, X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) =
+allocwork(t::JackknifeSurrogates{Correlation}, X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) where {T<:Real} =
     (Array(T, size(X, 1), size(X, 2)), Array(T, size(Y, 1), size(Y, 2)),
      Array(T, 1, size(X, 2)), Array(T, 1, size(Y, 2)),
      Array(T, div(size(X, 1), jnn(t)), size(X, 2)),
      Array(T, div(size(Y, 1), jnn(t)), size(Y, 2)))
-function computestat!{T<:Real}(t::JackknifeSurrogates{Correlation},
-                               out::JackknifeSurrogatesOutput,
-                               work::NTuple{6,Matrix{T}},
-                               X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T})
+function computestat!(t::JackknifeSurrogates{Correlation},
+                      out::JackknifeSurrogatesOutput,
+                      work::NTuple{6,Matrix{T}},
+                      X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) where T<:Real
     stat = t.transform
     trueval = out.trueval
     surrogates = out.surrogates

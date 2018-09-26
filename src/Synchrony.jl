@@ -20,17 +20,17 @@ function frequencies(nfft::Int, fs::Real, fmin::Real, fmax::Real=Inf)
 end
 
 # Compute frequencies based on data length, assuming padding to nextfastfft
-frequencies{T<:Real}(A::Union{AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}},
-                     fs::Real=1.0, fmin::Real=0.0, fmax::Real=Inf) =
+frequencies(A::Union{AbstractVector{T}, AbstractMatrix{T}, AbstractArray{T,3}},
+            fs::Real=1.0, fmin::Real=0.0, fmax::Real=Inf) where {T<:Real} =
     frequencies(nextfastfft(size(A, 1)), fs, fmin, fmax)
 
 # Get the equivalent complex type for a given type
-complextype{T<:Complex}(::Type{T}) = T
-complextype{T}(::Type{T}) = Complex{T}
+complextype(::Type{T}) where {T<:Complex} = T
+complextype(::Type{T}) where {T} = Complex{T}
 
 # Get preferred output type for a given input type
-outputtype{T<:AbstractFloat}(::Type{T}) = T
-outputtype{T<:Real}(::Type{T}) = Float64
+outputtype(::Type{T}) where {T<:AbstractFloat} = T
+outputtype(::Type{T}) where {T<:Real} = Float64
 
 include("transform_stats.jl")
 include("point_field.jl")

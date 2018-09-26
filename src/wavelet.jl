@@ -4,7 +4,7 @@ export MorletWavelet, MorseWavelet, wavebases, fstd, tstd, ContinuousWaveletTran
 #
 # Mother wavelets, which are convolved with the signal in frequency space
 # 
-abstract MotherWavelet{T<:Real}
+abstract type MotherWavelet{T<:Real} 
 
 # The analytic Morlet wavelet. See:
 # Torrence, C., & Compo, G. P. (1998). A practical guide to wavelet
@@ -13,16 +13,25 @@ abstract MotherWavelet{T<:Real}
 #
 # freq is the frequency in Hz
 # k0 is the wave number
-immutable MorletWavelet{T} <: MotherWavelet{T}
+end
+
+# The analytic Morlet wavelet. See:
+# Torrence, C., & Compo, G. P. (1998). A practical guide to wavelet
+# analysis. Bulletin of the American Meteorological Society, 79(1),
+# 61–78.
+#
+# freq is the frequency in Hz
+# k0 is the wave number
+struct MorletWavelet{T} <: MotherWavelet{T}
     freq::Vector{T}
     k0::T
     fourierfactor::T
 end
-MorletWavelet{T<:Real}(freq::Vector{T}, k0::Real=5.0) =
+MorletWavelet(freq::Vector{T}, k0::Real=5.0) where {T<:Real} =
     MorletWavelet(freq, convert(T, k0), convert(T, (4π)/(k0 + sqrt(2 + k0^2))))
 
 # Generate daughter wavelet (samples x frequencies)
-function wavebases{T}(w::MorletWavelet{T}, n::Int, fs::Real=1)
+function wavebases(w::MorletWavelet{T}, n::Int, fs::Real=1) where T
     df = 2π * fs / n
     normconst = sqrt(df) / sqrt(sqrt(π) * n)
     k0 = w.k0
@@ -41,12 +50,12 @@ function wavebases{T}(w::MorletWavelet{T}, n::Int, fs::Real=1)
     bases
 end
 
-fourierfactor{T}(w::MorletWavelet{T}) = w.fourierfactor
+fourierfactor(w::MorletWavelet{T}) where {T} = w.fourierfactor
 # std in the frequency domain, in units of Hz
-fstd{T}(w::MorletWavelet{T}) =
+fstd(w::MorletWavelet{T}) where {T} =
     [(f * w.fourierfactor) / (sqrt(2) * 2π) for f in w.freq]
 # std in the time domain, in units of time
-tstd{T}(w::MorletWavelet{T}) =
+tstd(w::MorletWavelet{T}) where {T} =
     [1 / (sqrt(2) * f * w.fourierfactor) for f in w.freq]
 
 # Generalized Morse wavelet (first family only). See:
@@ -59,16 +68,16 @@ tstd{T}(w::MorletWavelet{T}) =
 #
 # freq is the peak frequency in Hz
 # β and γ are wavelet parameters
-immutable MorseWavelet{T} <: MotherWavelet{T}
+struct MorseWavelet{T} <: MotherWavelet{T}
     freq::Vector{T}
     β::T
     γ::T
 end
-MorseWavelet{T<:Real}(freq::Vector{T}, β::Real, γ::Real) =
+MorseWavelet(freq::Vector{T}, β::Real, γ::Real) where {T<:Real} =
     MorseWavelet{T}(freq, convert(T, β), convert(T, γ))
 
 # Generate daughter wavelet (samples x frequencies)
-function wavebases{T}(w::MorseWavelet{T}, n::Int, fs::Real=1)
+function wavebases(w::MorseWavelet{T}, n::Int, fs::Real=1) where T
     γ = w.γ
     β = w.β
     # Peak frequency
@@ -95,8 +104,8 @@ function wavebases{T}(w::MorseWavelet{T}, n::Int, fs::Real=1)
 end
 
 # Fourier factor based on peak frequency
-fourierfactor{T}(w::MorseWavelet{T}) = 2*pi*(w.β/w.γ)^(-1/w.γ)
-function fstd{T}(w::MorseWavelet{T})
+fourierfactor(w::MorseWavelet{T}) where {T} = 2*pi*(w.β/w.γ)^(-1/w.γ)
+function fstd(w::MorseWavelet{T}) where T
     γ = w.γ
     β = w.β
     ff = fourierfactor(w)
@@ -107,7 +116,7 @@ function fstd{T}(w::MorseWavelet{T})
     [(f * ff * σ) / (2 * pi) for f in w.freq]
 end
 gammatil(x) = gamma(x)/2^x
-function tstd{T}(w::MorseWavelet{T})
+function tstd(w::MorseWavelet{T}) where T
     γ = w.γ
     β = w.β
     ff = fourierfactor(w)
@@ -120,7 +129,7 @@ end
 #
 # Functions for applying wavelets to data
 #
-immutable ContinuousWaveletTransform{T,S,P1,P2}
+struct ContinuousWaveletTransform{T,S,P1,P2}
     fftin::Vector{T}
     fftout::Vector{S}
     ifftwork::Vector{S}
@@ -130,8 +139,8 @@ immutable ContinuousWaveletTransform{T,S,P1,P2}
     p2::P2
 end
 
-function ContinuousWaveletTransform{T}(w::MotherWavelet{T}, nfft::Int, fs::Real=1;
-                                       coi::Vector=scale!(tstd(w), 2*fs))
+function ContinuousWaveletTransform(w::MotherWavelet{T}, nfft::Int, fs::Real=1;
+                                    coi::Vector=scale!(tstd(w), 2*fs)) where T
     fftin = Array(T, nfft)
     fftout = zeros(Complex{T}, div(nfft, 2)+1)
     ifftwork = zeros(Complex{T}, nfft)
@@ -140,8 +149,8 @@ function ContinuousWaveletTransform{T}(w::MotherWavelet{T}, nfft::Int, fs::Real=
     ContinuousWaveletTransform(fftin, fftout, ifftwork, bases, coi, plan_rfft(fftin), plan_bfft!(ifftwork))
 end
 
-function evaluate!{T,S<:AbstractFloat}(out::Array{Complex{S}, 2}, t::ContinuousWaveletTransform{T},
-                                       signal::AbstractVector{T})
+function evaluate!(out::Array{Complex{S}, 2}, t::ContinuousWaveletTransform{T},
+                   signal::AbstractVector{T}) where {T,S<:AbstractFloat}
     @inbounds begin
         fftin = t.fftin
         fftout = t.fftout
@@ -249,7 +258,7 @@ function evaluate!{T,S<:AbstractFloat}(out::Array{Complex{S}, 2}, t::ContinuousW
 end
 
 # Friendly interface to ContinuousWaveletTransform
-function cwt{T<:Real}(signal::Vector{T}, w::MotherWavelet, fs::Real=1)
+function cwt(signal::Vector{T}, w::MotherWavelet, fs::Real=1) where T<:Real
     t = ContinuousWaveletTransform(w, nextfastfft(length(signal)), fs)
     evaluate!(Array(Complex{T}, length(signal), size(t.bases, 2)), t, signal)
 end
