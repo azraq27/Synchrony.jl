@@ -10,7 +10,7 @@ allocoutput(::PowerSpectrum, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     Array(T, 1, nchannels(X))
 
 # Single input matrix
-computestat!(::PowerSpectrum, out::AbstractMatrix{T}, ::Void,
+computestat!(::PowerSpectrum, out::AbstractMatrix{T}, ::Nothing,
              X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     scale!(sumabs2!(out, X), 1/ntrials(X))
 
@@ -23,13 +23,13 @@ Base.eltype(::CrossSpectrum, X::AbstractArray{Complex{T}}) where {T<:Real} = Com
 
 # Single input matrix
 allocwork(::CrossSpectrum, X::AbstractVecOrMat{T}) where {T<:Complex} = nothing
-computestat!(::CrossSpectrum, out::AbstractMatrix{T}, ::Void,
+computestat!(::CrossSpectrum, out::AbstractMatrix{T}, ::Nothing,
              X::AbstractVecOrMat{T}) where {T<:Complex} =
     scale!(Ac_mul_A!(out, X), 1/ntrials(X))
 
 # Two input matrices
 allocwork(::CrossSpectrum, X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) where {T<:Complex} = nothing
-computestat!(::CrossSpectrum, out::AbstractMatrix{T}, ::Void,
+computestat!(::CrossSpectrum, out::AbstractMatrix{T}, ::Nothing,
              X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}) where {T<:Complex} =
     scale!(Ac_mul_B!(out, X, Y), 1/ntrials(X))
 

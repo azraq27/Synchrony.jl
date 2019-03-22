@@ -5,7 +5,7 @@ export spiketriggeredspectrum, pfcoherence, pfplv, pfppc0, pfppc1, pfppc2, pxcor
 #
 function spiketriggeredspectrum(points::AbstractVector{T}, field::AbstractVector{S},
                                 window::UnitRange{Int};
-                                nfft::Int=nextpow2(length(window)),
+                                nfft::Int=nextpow(2, length(window)),
                                 freqrange::UnitRange{Int}=1:(nfft >> 1 + 1),
                                 tapers::Union{AbstractVector, AbstractMatrix}=hanning(length(window))) where {T<:Integer,S<:Real}
     n = length(window)

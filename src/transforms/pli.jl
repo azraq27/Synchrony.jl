@@ -87,7 +87,7 @@ allocwork(::PLStat, X::AbstractVecOrMat{T}, Y::AbstractVecOrMat{T}=X) where {T<:
     nothing
 
 # Single input matrix
-function computestat!(t::S, out::AbstractMatrix{T}, work::Void,
+function computestat!(t::S, out::AbstractMatrix{T}, work::Nothing,
                       X::AbstractVecOrMat{Complex{T}}) where {S<:PLStat, T<:Real}
     chkinput(out, X)
     for k = 1:size(X, 2), j = 1:k
@@ -101,7 +101,7 @@ function computestat!(t::S, out::AbstractMatrix{T}, work::Void,
 end
 
 # Two input matrices
-function computestat!(t::S, out::AbstractMatrix{T}, work::Void,
+function computestat!(t::S, out::AbstractMatrix{T}, work::Nothing,
                       X::AbstractVecOrMat{Complex{T}},
                       Y::AbstractVecOrMat{Complex{T}}) where {S<:PLStat, T<:Real}
     chkinput(out, X, Y)
