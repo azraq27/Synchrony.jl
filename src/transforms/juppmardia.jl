@@ -10,9 +10,9 @@
 #
 # Mardia, K. V., & Jupp, P. E. (2009). Directional Statistics. John
 # Wiley & Sons, p. 249. 
-immutable JuppMardiaR{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
+struct JuppMardiaR{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
 JuppMardiaR() = JuppMardiaR{false}()
-Base.eltype{T<:Real}(::JuppMardiaR, X::AbstractArray{Complex{T}}) = T
+Base.eltype(::JuppMardiaR, X::AbstractArray{Complex{T}}) where {T<:Real} = T
 
 function meandiff!(out, X)
     for j = 1:size(X, 2)
@@ -33,17 +33,17 @@ function meandiff!(out, X)
     out
 end
 
-immutable JuppMardiaRWorkX{T<:Real}
+struct JuppMardiaRWorkX{T<:Real}
     workX::Matrix{T}
     covwork::Matrix{T}
 
-    JuppMardiaRWorkX(w1, w2) = new(w1, w2)
-    JuppMardiaRWorkX(w1, w2, w3) = new(w1, w2, w3)
+    JuppMardiaRWorkX{T<:Real}(w1, w2) where {T<:Real} = new(w1, w2)
+    JuppMardiaRWorkX{T<:Real}(w1, w2, w3) where {T<:Real} = new(w1, w2, w3)
 end
-allocwork{T<:Real}(t::JuppMardiaR{true}, X::AbstractVecOrMat{Complex{T}}) =
+allocwork(t::JuppMardiaR{true}, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     (Array(T, size(X, 1), size(X, 2)*2),  Array(T, size(X, 2)*2, size(X, 2)*2))
-function computestat!{T<:Real}(t::JuppMardiaR{true}, out::AbstractMatrix{T}, work::Tuple{Matrix{T}, Matrix{T}},
-                               X::AbstractVecOrMat{Complex{T}})
+function computestat!(t::JuppMardiaR{true}, out::AbstractMatrix{T}, work::Tuple{Matrix{T}, Matrix{T}},
+                      X::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X)
     workX, covwork = work
 
@@ -68,14 +68,14 @@ function computestat!{T<:Real}(t::JuppMardiaR{true}, out::AbstractMatrix{T}, wor
     out
 end
 
-immutable JuppMardiaRWorkXY{T<:Real}
+struct JuppMardiaRWorkXY{T<:Real}
     workX::Matrix{T}
     workY::Matrix{T}
     covwork::Matrix{T}
     invsqrtsumX::Matrix{T}
     invsqrtsumY::Matrix{T}
 end
-function allocwork{T<:Real}(t::JuppMardiaR{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function allocwork(t::JuppMardiaR{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     JuppMardiaRWorkXY{T}(Array(T, size(X, 1), size(X, 2)*2),
                          Array(T, size(Y, 1), size(Y, 2)*2),
                          Array(T, size(X, 2)*2, size(Y, 2)*2),
@@ -92,8 +92,8 @@ function reimcor!(workX, invsqrtsumX, n)
     end
     workX
 end
-function computestat!{T<:Real}(t::JuppMardiaR{true}, out::AbstractMatrix{T}, work::JuppMardiaRWorkXY{T},
-                               X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function computestat!(t::JuppMardiaR{true}, out::AbstractMatrix{T}, work::JuppMardiaRWorkXY{T},
+                      X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X, Y)
 
     # Compute mean phases

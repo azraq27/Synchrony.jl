@@ -12,20 +12,20 @@
 # hippocampus during performance of a T-maze task. Proceedings of the
 # National Academy of Sciences, 105(51), 20517–20522.
 # doi:10.1073/pnas.0810524105
-immutable HurtadoModulationIndex <: PairwiseStatistic
+struct HurtadoModulationIndex <: PairwiseStatistic
     nbins::UInt8
     hmax::Float64
 
     HurtadoModulationIndex(nbins) = new(nbins, log(nbins))
 end
 HurtadoModulationIndex() = HurtadoModulationIndex(18)
-Base.eltype{T<:Real}(::HurtadoModulationIndex, X::AbstractArray{Complex{T}}) = T
+Base.eltype(::HurtadoModulationIndex, X::AbstractArray{Complex{T}}) where {T<:Real} = T
 
-allocwork{T<:Real}(t::HurtadoModulationIndex, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) =
+allocwork(t::HurtadoModulationIndex, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     (Array(UInt8, size(X, 1), size(X, 2)), Array(Int32, t.nbins, nchannels(X)),
      Array(T, size(X, 1)), Array(Float64, t.nbins))
 
-function binphases!{T<:Real}(phasebin::Matrix{UInt8}, ninbin::Matrix{Int32}, X::AbstractVecOrMat{Complex{T}})
+function binphases!(phasebin::Matrix{UInt8}, ninbin::Matrix{Int32}, X::AbstractVecOrMat{Complex{T}}) where T<:Real
     fill!(ninbin, UInt8(0))
     m = size(ninbin, 1)/2pi
     for j = 1:size(X, 2), i = 1:size(X, 1)
@@ -34,7 +34,7 @@ function binphases!{T<:Real}(phasebin::Matrix{UInt8}, ninbin::Matrix{Int32}, X::
     end
 end
 
-function sumphases!{T<:Real}(meanamp::Vector{Float64}, phasebin::Matrix{UInt8}, amp::Vector{T}, iphase::Int)
+function sumphases!(meanamp::Vector{Float64}, phasebin::Matrix{UInt8}, amp::Vector{T}, iphase::Int) where T<:Real
     # Empty phase bins
     for i = 1:length(meanamp)
         @inbounds meanamp[i] = 0
@@ -66,9 +66,9 @@ function finish_mi!(meanamp::Vector{Float64}, ninbin::AbstractVecOrMat{Int32}, i
 end
 
 # X is phase, Y is amplitude
-function computestat!{T<:Real}(t::HurtadoModulationIndex, out::AbstractMatrix{T},
-                               work::Tuple{Matrix{UInt8}, Matrix{Int32}, Vector{T}, Vector{Float64}},
-                               X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function computestat!(t::HurtadoModulationIndex, out::AbstractMatrix{T},
+                      work::Tuple{Matrix{UInt8}, Matrix{Int32}, Vector{T}, Vector{Float64}},
+                      X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     nbins = t.nbins
     phasebin, ninbin, amp, meanamp = work
     chkinput(out, X, Y)
@@ -92,12 +92,12 @@ function computestat!{T<:Real}(t::HurtadoModulationIndex, out::AbstractMatrix{T}
     out
 end
 
-allocwork{T<:Real}(t::AbstractJackknifeSurrogates{HurtadoModulationIndex}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) =
+allocwork(t::AbstractJackknifeSurrogates{HurtadoModulationIndex}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}=X) where {T<:Real} =
     (Array(UInt8, size(X, 1), size(X, 2)), Array(Int32, t.transform.nbins, nchannels(X)),
      Array(T, size(X, 1)), Array(Float64, t.transform.nbins), Array(Int32, t.transform.nbins), Array(Float64, t.transform.nbins))
-function computestat!{T<:Real}(t::AbstractJackknifeSurrogates{HurtadoModulationIndex}, out::JackknifeSurrogatesOutput,
-                               work::Tuple{Matrix{UInt8}, Matrix{Int32}, Vector{T}, Vector{Float64}, Vector{Int32}, Vector{Float64}},
-                               X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function computestat!(t::AbstractJackknifeSurrogates{HurtadoModulationIndex}, out::JackknifeSurrogatesOutput,
+                      work::Tuple{Matrix{UInt8}, Matrix{Int32}, Vector{T}, Vector{Float64}, Vector{Int32}, Vector{Float64}},
+                      X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     trueval = out.trueval
     surrogates = out.surrogates
     nbins = t.transform.nbins

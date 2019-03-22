@@ -3,9 +3,9 @@
 #
 # See Jammalamadaka, S. R., & Sengupta, A. (2001). Topics in Circular
 # Statistics. World Scientific, p. 176
-immutable JammalamadakaR{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
+struct JammalamadakaR{Normalized} <: NormalizedPairwiseStatistic{Normalized} end
 JammalamadakaR() = JammalamadakaR{false}()
-Base.eltype{T<:Real}(::JammalamadakaR, X::AbstractArray{Complex{T}}) = T
+Base.eltype(::JammalamadakaR, X::AbstractArray{Complex{T}}) where {T<:Real} = T
 
 function sinmeanphasediff!(out, X)
     for j = 1:size(X, 2)
@@ -26,10 +26,10 @@ function sinmeanphasediff!(out, X)
     out
 end
 
-allocwork{T<:Real}(t::JammalamadakaR{true}, X::AbstractVecOrMat{Complex{T}}) =
+allocwork(t::JammalamadakaR{true}, X::AbstractVecOrMat{Complex{T}}) where {T<:Real} =
     Array(T, size(X, 1), size(X, 2))
-function computestat!{T<:Real}(t::JammalamadakaR{true}, out::AbstractMatrix{T},
-                               work::Matrix{T}, X::AbstractVecOrMat{Complex{T}})
+function computestat!(t::JammalamadakaR{true}, out::AbstractMatrix{T},
+                      work::Matrix{T}, X::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X)
 
     # Sins minus mean phases
@@ -40,20 +40,20 @@ function computestat!{T<:Real}(t::JammalamadakaR{true}, out::AbstractMatrix{T},
     cov2coh!(out, out, Base.AbsFun())
 end
 
-immutable JammalamadakaRWorkXY{T<:Real}
+struct JammalamadakaRWorkXY{T<:Real}
     workX::Matrix{T}
     workY::Matrix{T}
     sumworkX::Matrix{T}
     sumworkY::Matrix{T}
 end
-function allocwork{T<:Real}(t::JammalamadakaR{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function allocwork(t::JammalamadakaR{true}, X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     JammalamadakaRWorkXY{T}(Array(T, size(X, 1), size(X, 2)),
                             Array(T, size(Y, 1), size(Y, 2)),
                             Array(T, 1, nchannels(X)),
                             Array(T, 1, nchannels(Y)))
 end
-function computestat!{T<:Real}(t::JammalamadakaR{true}, out::AbstractMatrix{T}, work::JammalamadakaRWorkXY{T},
-                               X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}})
+function computestat!(t::JammalamadakaR{true}, out::AbstractMatrix{T}, work::JammalamadakaRWorkXY{T},
+                      X::AbstractVecOrMat{Complex{T}}, Y::AbstractVecOrMat{Complex{T}}) where T<:Real
     chkinput(out, X, Y)
 
     # Sins minus mean phases
