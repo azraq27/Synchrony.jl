@@ -1,0 +1,4 @@
+name = "Synchrony"
+uuid = "0c45d3a9-7431-4fc2-9f19-c552092f108b"
+authors = ["Simon Kornblith"]
+version = "0.1.0"
